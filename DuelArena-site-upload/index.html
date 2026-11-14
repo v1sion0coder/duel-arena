@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duel Arena: 1v1 duels for Minecraft 26.2+</title>
+<meta name="description" content="Duel Arena by v1sion: server-side 1v1 duels for Fabric & Forge 26.2+. Auto-built maps, 10 kits, ranked ELO, chest menus, live scoreboard and animations.">
+<link rel="icon" href="icon.png">
+<style>
+  :root{--bg:#0d0a14;--panel:#171223;--line:#2a2140;--text:#ece6f7;--mute:#a497bd;--pink:#ff6fb5;--gold:#ffc83d;--aqua:#4fe3ff;--purple:#b46cff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  .px{image-rendering:pixelated}
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:rgba(13,10,20,.75);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.5px}
+  .brand img{width:34px;height:34px;border-radius:6px}
+  nav ul{display:flex;gap:26px;list-style:none;font-size:15px;color:var(--mute)}
+  nav ul a:hover{color:var(--text)}
+  @media(max-width:720px){nav ul{display:none}}
+  /* hero */
+  .hero{position:relative;padding:90px 0 60px;text-align:center}
+  .hero:before{content:"";position:absolute;inset:-200px 0 auto;height:700px;background:radial-gradient(600px 300px at 50% 30%,rgba(255,111,181,.25),transparent 70%),radial-gradient(500px 260px at 20% 10%,rgba(180,108,255,.2),transparent 70%);z-index:-1}
+  .tag{display:inline-block;padding:6px 14px;border:1px solid var(--line);border-radius:99px;font-size:13px;color:var(--mute);margin-bottom:22px}
+  .tag b{color:var(--gold)}
+  h1{font-size:clamp(42px,7vw,78px);line-height:1.02;font-weight:900;letter-spacing:-1.5px}
+  h1 span{background:linear-gradient(90deg,var(--pink),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{max-width:640px;margin:22px auto 34px;color:var(--mute);font-size:19px}
+  .btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:12px;font-weight:700;transition:transform .15s,box-shadow .15s}
+  .btn:hover{transform:translateY(-2px)}
+  .btn.main{background:linear-gradient(135deg,var(--pink),#ff8e6b);color:#1a0d16;box-shadow:0 10px 30px -10px rgba(255,111,181,.7)}
+  .btn.alt{border:1px solid var(--line);background:var(--panel)}
+  .shot{margin:60px auto 0;max-width:980px;position:relative}
+  .shot img{width:100%;border-radius:18px;border:1px solid var(--line);box-shadow:0 40px 90px -30px rgba(255,111,181,.35);animation:float 6s ease-in-out infinite}
+  @keyframes float{50%{transform:translateY(-10px)}}
+  /* sections */
+  section{padding:90px 0}
+  h2{font-size:clamp(30px,4vw,44px);font-weight:850;letter-spacing:-.5px;margin-bottom:12px}
+  .lead{color:var(--mute);max-width:620px;margin-bottom:46px;font-size:18px}
+  .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;transition:border-color .2s,transform .2s}
+  .card:hover{border-color:#4a3870;transform:translateY(-3px)}
+  .card .ico{font-size:28px;margin-bottom:10px}
+  .card h3{font-size:18px;margin-bottom:6px}
+  .card p{color:var(--mute);font-size:15px}
+  /* kits */
+  .kits{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .kit{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .kit b{display:block;color:var(--gold);margin-bottom:2px}
+  .kit small{color:var(--mute)}
+  /* maps */
+  .maps{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:center}
+  @media(max-width:820px){.maps{grid-template-columns:1fr}}
+  .maps img{width:100%;border-radius:16px;border:1px solid var(--line)}
+  .maplist div{padding:16px 0;border-bottom:1px solid var(--line)}
+  .maplist b{font-size:18px}
+  .maplist p{color:var(--mute);font-size:15px}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px}
+  /* mock ui */
+  .ui{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+  .mc{font-family:ui-monospace,Menlo,Consolas,monospace;background:#1b1b1b;border:3px solid #000;box-shadow:inset 0 0 0 2px #555;border-radius:4px;padding:14px;font-size:14px}
+  .sb{background:rgba(0,0,0,.55);border:none;box-shadow:none;max-width:260px;margin-left:auto}
+  .sb .t{text-align:center;color:#ffaa00;font-weight:700;margin-bottom:6px}
+  .g{color:#aaa}.y{color:#ff5}.a{color:#5ff}.gr{color:#5f5}.r{color:#f55}.p{color:#f5f}.o{color:#fa0}.d{color:#555}
+  .title{text-align:center;padding:36px 10px;background:linear-gradient(#27452a,#1d2f1f);border-radius:8px;border:1px solid var(--line)}
+  .title .big{font:900 46px/1 system-ui;color:#ffaa00;text-shadow:4px 4px 0 #3f2a00;animation:pop 1.6s infinite}
+  .title .small{margin-top:10px;color:#ff5;font-family:ui-monospace,monospace;text-shadow:2px 2px 0 #333}
+  @keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .bar{height:12px;background:#333;border-radius:2px;overflow:hidden;margin-top:6px}
+  .bar i{display:block;height:100%;width:62%;background:linear-gradient(90deg,#3c3,#9f6);animation:hp 4s infinite}
+  @keyframes hp{0%{width:90%}60%{width:35%;background:#fc3}100%{width:90%}}
+  /* commands */
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  td:first-child{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--aqua);white-space:nowrap}
+  td:last-child{color:var(--mute)}
+  /* download */
+  .dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+  .dl .card{display:flex;flex-direction:column;gap:10px}
+  .dl .btn{justify-content:center;margin-top:auto}
+  ol{padding-left:20px;color:var(--mute)} ol li{margin:6px 0}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#231b33;padding:2px 6px;border-radius:5px;color:var(--text);font-size:14px}
+  footer{padding:40px 0;border-top:1px solid var(--line);color:var(--mute);font-size:14px;text-align:center}
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
+  .reveal.in{opacity:1;transform:none}
+  /* petals */
+  .petal{position:fixed;top:-20px;width:10px;height:10px;background:var(--pink);border-radius:60% 0 60% 0;opacity:.6;pointer-events:none;z-index:1;animation:fall linear forwards}
+  @keyframes fall{to{transform:translate(var(--dx),110vh) rotate(540deg)}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#"><img class="px" src="icon.png" alt="">Duel Arena</a>
+  <ul><li><a href="#features">Features</a></li><li><a href="#kits">Kits</a></li><li><a href="#maps">Maps</a></li><li><a href="#ui">UI</a></li><li><a href="#commands">Commands</a></li><li><a href="#download">Download</a></li></ul>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div class="tag">Minecraft <b>26.2+</b> • Fabric & Forge • Server-side</div>
+  <h1>1v1 duels,<br><span>done right.</span></h1>
+  <p class="sub">Auto-built maps, 10 kits, ranked ELO, chest menus, a live scoreboard and animations for everything. Players don't need to install anything.</p>
+  <div class="btns">
+    <a class="btn main" href="#download">⬇ Download</a>
+    <a class="btn alt" href="#features">See features</a>
+  </div>
+  <div class="shot reveal"><img src="cherry-3d.png" alt="Cherry Garden arena"></div>
+</div></header>
+
+<section id="features"><div class="wrap">
+  <h2 class="reveal">Everything a duel server needs</h2>
+  <p class="lead reveal">Drop the jar in your mods folder and it's ready. Vanilla clients join as normal.</p>
+  <div class="grid">
+    <div class="card reveal"><div class="ico">⚔</div><h3>Challenges</h3><p>Pick a player, kit, map and rounds from a menu. They get a big title and clickable Accept / Deny.</p></div>
+    <div class="card reveal"><div class="ico">🏆</div><h3>Ranked queue</h3><p>Matchmaking by closest ELO, with ranks from Bronze to Champion, win streaks and a leaderboard.</p></div>
+    <div class="card reveal"><div class="ico">🗺</div><h3>Auto-built maps</h3><p>Every duel gets its own arena far from spawn. Maps are reused, so rounds reset in milliseconds.</p></div>
+    <div class="card reveal"><div class="ico">📦</div><h3>Shulker kits</h3><p>Fill a shulker, hold it, run <code>/duel kit save name</code>. Armor and offhand are equipped automatically.</p></div>
+    <div class="card reveal"><div class="ico">✎</div><h3>Kit layouts</h3><p>Arrange each kit's hotbar once and it's used in every duel.</p></div>
+    <div class="card reveal"><div class="ico">🏗</div><h3>Your own maps</h3><p>Build an arena, mark two corners and two spawns, save it. It's copied into every duel.</p></div>
+    <div class="card reveal"><div class="ico">📊</div><h3>Live HUD</h3><p>Opponent health bar, sidebar with score pips, timer, pops and damage, plus combo counters.</p></div>
+    <div class="card reveal"><div class="ico">👁</div><h3>Spectating</h3><p>Watch any live duel from the menu, with your own spectator scoreboard.</p></div>
+    <div class="card reveal"><div class="ico">💾</div><h3>Safe & persistent</h3><p>Inventories are restored after every duel, even on disconnect or server stop. Stats and history are saved.</p></div>
+  </div>
+</div></section>
+
+<section id="kits"><div class="wrap">
+  <h2 class="reveal">10 built-in kits</h2>
+  <p class="lead reveal">Plus as many custom kits as you like, made straight from a shulker box.</p>
+  <div class="kits">
+    <div class="kit reveal"><b>Crystal PvP</b><small>Netherite, crystals, anchors, totems</small></div>
+    <div class="kit reveal"><b>Basic PvP</b><small>Iron gear, sword, axe, bow</small></div>
+    <div class="kit reveal"><b>Sword</b><small>Diamond armor + sword</small></div>
+    <div class="kit reveal"><b>Axe & Shield</b><small>Axe, shield, crossbow</small></div>
+    <div class="kit reveal"><b>Netherite Pot</b><small>Netherite + healing pots</small></div>
+    <div class="kit reveal"><b>Diamond Pot</b><small>Full inventory of instant health</small></div>
+    <div class="kit reveal"><b>UHC</b><small>Buckets, cobble, bow, gapples</small></div>
+    <div class="kit reveal"><b>SMP</b><small>Totems, webs, wind charges</small></div>
+    <div class="kit reveal"><b>Mace</b><small>Wind burst mace + elytra</small></div>
+    <div class="kit reveal"><b>Archer</b><small>Power V bow, multishot</small></div>
+  </div>
+</div></section>
+
+<section id="maps"><div class="wrap">
+  <h2 class="reveal">Maps worth fighting on</h2>
+  <p class="lead reveal">Built automatically the first time they're used. Bedrock under every fight floor, so crystals can't blow into the void.</p>
+  <div class="maps">
+    <img class="reveal px" src="cherry-top.png" alt="Cherry Garden from above">
+    <div class="maplist reveal">
+      <div><b><span class="dot" style="background:#ff8fc4"></span>Cherry Garden</b><p>Floating island with snowy peaks, a giant cherry tree, pagodas, torii gates, a pond and a big 49×49 grass field.</p></div>
+      <div><b><span class="dot" style="background:#d1442f"></span>Inferno</b><p>Nether island with huge fungi, basalt spires and lava pools.</p></div>
+      <div><b><span class="dot" style="background:#d8d39a"></span>The End</b><p>End stone, obsidian pillars with end rods, chorus trees.</p></div>
+      <div><b><span class="dot" style="background:#3b2a59"></span>Classic</b><p>A clean obsidian box.</p></div>
+      <div><b><span class="dot" style="background:var(--aqua)"></span>Your maps</b><p>Save anything you build with <code>/duel arena save</code>.</p></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="ui"><div class="wrap">
+  <h2 class="reveal">UI & animations</h2>
+  <p class="lead reveal">Everything happens server-side using vanilla titles, boss bars, sidebars, particles and sounds.</p>
+  <div class="ui">
+    <div class="reveal">
+      <div class="title"><div class="big">★ VICTORY ★</div><div class="small">+16 ELO • 3 - 1</div></div>
+      <p style="color:var(--mute);margin-top:10px;font-size:14px">Personal VICTORY / DEFEAT titles with fireworks, lightning and particles.</p>
+    </div>
+    <div class="reveal">
+      <div class="mc sb">
+        <div class="t">⚔ DUEL ARENA ⚔</div>
+        <div><span class="g">Kit</span> <span class="a">Crystal PvP</span></div>
+        <div><span class="g">Map</span> <span class="gr">Cherry Garden</span></div>
+        <div><span class="g">Round</span> <span class="y">3 (first to 3)</span></div>
+        <div><span class="g">Time</span> 3:42</div><br>
+        <div><span class="gr">You </span> <span class="o">● ●</span> <span class="d">○</span></div>
+        <div><span class="r">Them</span> <span class="o">●</span> <span class="d">○ ○</span></div><br>
+        <div><span class="g">Steve</span> <span class="r">7.5❤</span></div>
+        <div><span class="g">Pops</span> <span class="p">2 you • 5 them</span></div>
+        <div class="d"><i>by v1sion</i></div>
+      </div>
+      <p style="color:var(--mute);margin-top:10px;font-size:14px;text-align:right">Live sidebar for players and spectators.</p>
+    </div>
+    <div class="reveal">
+      <div class="mc">
+        <div style="text-align:center"><b style="color:#fff">Steve</b> <span class="gr">14.5❤</span> <span class="p">• 6 totems •</span> <span class="o">2 - 1</span> <span class="g">• ⏱ 3:42</span></div>
+        <div class="bar"><i></i></div>
+        <div style="text-align:center;margin-top:22px" class="o"><b>✦ 6x COMBO ✦</b></div>
+      </div>
+      <p style="color:var(--mute);margin-top:10px;font-size:14px">Opponent health bar that changes colour, plus a combo counter.</p>
+    </div>
+  </div>
+  <div class="grid" style="margin-top:22px">
+    <div class="card reveal"><h3>Countdown</h3><p>Shrinking particle rings, orbiting sparkles, rising notes and » 3 « titles.</p></div>
+    <div class="card reveal"><h3>Rounds</h3><p>Spawn beams, ROUND WON / LOST titles and a lightning kill effect.</p></div>
+    <div class="card reveal"><h3>Chest menus</h3><p><code>/duel</code> opens a menu with the queue, challenges, spectating, the kit editor and stats.</p></div>
+  </div>
+</div></section>
+
+<section id="commands"><div class="wrap">
+  <h2 class="reveal">Commands</h2>
+  <p class="lead reveal">Most players only need <code>/duel</code>. Everything else is in the menu.</p>
+  <table class="reveal">
+    <tr><td>/duel</td><td>Open the menu</td></tr>
+    <tr><td>/duel &lt;player&gt;</td><td>Challenge someone (menu picks kit, map, rounds)</td></tr>
+    <tr><td>/duel &lt;player&gt; &lt;kit&gt; &lt;firstTo&gt; &lt;map&gt;</td><td>Challenge directly</td></tr>
+    <tr><td>/duel accept | deny [player]</td><td>Answer a challenge</td></tr>
+    <tr><td>/duel queue &lt;kit&gt;</td><td>Join ranked matchmaking</td></tr>
+    <tr><td>/duel rematch</td><td>Run it back</td></tr>
+    <tr><td>/duel spectate &lt;player&gt;</td><td>Watch a duel</td></tr>
+    <tr><td>/duel leave</td><td>Forfeit or stop spectating</td></tr>
+    <tr><td>/duel stats | top | history</td><td>ELO, leaderboard, recent duels</td></tr>
+    <tr><td>/duel layout &lt;kit&gt;</td><td>Arrange a kit's hotbar</td></tr>
+    <tr><td>/duel kit save &lt;name&gt;</td><td>Hold a shulker to make a custom kit</td></tr>
+    <tr><td>/duel arena pos1 | pos2 | spawn1 | spawn2</td><td>Mark your own map</td></tr>
+    <tr><td>/duel arena save &lt;name&gt;</td><td>Save the marked map</td></tr>
+  </table>
+</div></section>
+
+<section id="download"><div class="wrap">
+  <h2 class="reveal">Download</h2>
+  <p class="lead reveal">Version 1.3.1 for Minecraft 26.2 and newer.</p>
+  <div class="dl">
+    <div class="card reveal"><h3>Fabric</h3><p>Needs Fabric Loader 0.19+ and Fabric API.</p><a class="btn main" href="DuelArena-1.3.1-fabric-26.2.jar" download>⬇ Fabric jar</a></div>
+    <div class="card reveal"><h3>Forge</h3><p>Needs Forge 65.1+.</p><a class="btn main" href="DuelArena-1.3.1-forge-26.2.jar" download>⬇ Forge jar</a></div>
+    <div class="card reveal"><h3>Install</h3><ol><li>Put the jar in your server's <code>mods</code> folder</li><li>Start the server</li><li>Type <code>/duel</code> in game</li></ol><p style="margin-top:8px">Settings live in <code>config/duelarena/config.json</code>.</p></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Duel Arena by <b style="color:var(--text)">v1sion</b> • Not affiliated with Mojang or Microsoft.</div></footer>
+
+<script>
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), {threshold: .12});
+  document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 6) * 60 + 'ms'; io.observe(el); });
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(() => {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.setProperty('--dx', (Math.random() * 200 - 100) + 'px');
+    p.style.animationDuration = 7 + Math.random() * 6 + 's';
+    p.style.transform = 'scale(' + (0.6 + Math.random()) + ')';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 14000);
+  }, 700);
+</script>
+</body>
+</html>
