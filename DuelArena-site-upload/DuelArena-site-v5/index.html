@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duel Arena: 1v1 duels for Minecraft 26.2+</title>
+<meta name="description" content="Duel Arena by v1sion: server-side 1v1 duels for Fabric & Forge 26.2+. Auto-built maps, 10 kits, ranked ELO, chest menus, live scoreboard and animations.">
+<meta property="og:title" content="Duel Arena: 1v1 duels, done right">
+<meta property="og:description" content="Server-side duels for Minecraft 26.2+. Fabric & Forge.">
+<meta property="og:image" content="cherry-3d.png">
+<meta name="theme-color" content="#0b0812">
+<link rel="icon" href="icon.png">
+<style>
+:root{--bg:#0b0812;--bg2:#120d1d;--panel:rgba(26,19,40,.72);--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);--text:#f1ecfa;--mute:#a99dc2;--pink:#ff6fb5;--pink2:#ff9ccc;--gold:#ffc83d;--aqua:#4fe3ff;--purple:#b46cff;--green:#5dff7a;--red:#ff5a5a;--r:18px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font:16px/1.65 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px;position:relative}
+.px{image-rendering:pixelated}
+::selection{background:var(--pink);color:#1a0d16}
+
+/* background layers */
+#petals{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.aurora i{position:absolute;border-radius:50%;filter:blur(90px);opacity:.38;animation:drift 22s ease-in-out infinite alternate}
+.aurora i:nth-child(1){width:620px;height:620px;background:#ff4fa3;top:-200px;left:-120px}
+.aurora i:nth-child(2){width:520px;height:520px;background:#7a3cff;top:10%;right:-180px;animation-delay:-6s}
+.aurora i:nth-child(3){width:480px;height:480px;background:#ff9a3c;bottom:-220px;left:30%;opacity:.2;animation-delay:-12s}
+@keyframes drift{to{transform:translate(80px,60px) scale(1.15)}}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+main,nav,footer{position:relative;z-index:2}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(16px) saturate(1.4);background:rgba(11,8,18,.6);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:17px;letter-spacing:.3px}
+.brand img{width:36px;height:36px;border-radius:8px;box-shadow:0 0 0 1px var(--line2),0 6px 20px -6px var(--pink)}
+.links{display:flex;gap:4px;list-style:none}
+.links a{padding:8px 14px;border-radius:10px;color:var(--mute);font-size:15px;font-weight:500;transition:.2s}
+.links a:hover,.links a.on{color:var(--text);background:rgba(255,255,255,.06)}
+.navcta{padding:9px 18px;border-radius:11px;background:linear-gradient(135deg,var(--pink),#ff8e6b);color:#1a0d16;font-weight:700;font-size:14px}
+#prog{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:linear-gradient(90deg,var(--pink),var(--gold))}
+@media(max-width:860px){.links{display:none}}
+
+/* hero */
+.hero{padding:96px 0 40px;text-align:center;position:relative}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:7px 8px 7px 16px;border:1px solid var(--line2);border-radius:99px;font-size:13.5px;color:var(--mute);background:rgba(255,255,255,.03);margin-bottom:26px}
+.pill b{color:var(--text)}
+.pill span{padding:3px 10px;border-radius:99px;background:rgba(255,111,181,.15);color:var(--pink2);font-weight:600}
+h1{font-size:clamp(46px,8vw,96px);line-height:.98;font-weight:900;letter-spacing:-2.5px}
+.shine{background:linear-gradient(100deg,var(--pink) 0%,var(--gold) 30%,#fff 45%,var(--gold) 60%,var(--pink) 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
+@keyframes shine{to{background-position:-250% 0}}
+.sub{max-width:660px;margin:26px auto 36px;color:var(--mute);font-size:clamp(17px,2vw,20px)}
+.btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn{position:relative;display:inline-flex;align-items:center;gap:10px;padding:15px 28px;border-radius:14px;font-weight:700;font-size:16px;transition:transform .2s,box-shadow .2s,background .2s;overflow:hidden}
+.btn:hover{transform:translateY(-3px)}
+.btn.main{background:linear-gradient(135deg,var(--pink),#ff8e6b);color:#1a0d16;box-shadow:0 14px 40px -12px rgba(255,111,181,.8)}
+.btn.main:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.5),transparent 70%);transform:translateX(-100%);animation:sweep 3.5s ease-in-out infinite}
+@keyframes sweep{60%,100%{transform:translateX(100%)}}
+.btn.alt{border:1px solid var(--line2);background:rgba(255,255,255,.04);backdrop-filter:blur(8px)}
+.btn.alt:hover{background:rgba(255,255,255,.08)}
+
+.stage{margin:70px auto 0;max-width:1040px;perspective:1400px}
+.tilt{position:relative;transform-style:preserve-3d;transition:transform .25s ease-out}
+.tilt img{width:100%;border-radius:24px;border:1px solid var(--line2);box-shadow:0 60px 120px -40px rgba(255,111,181,.45),0 0 0 1px rgba(255,255,255,.03)}
+.tilt .glare{position:absolute;inset:0;border-radius:24px;background:radial-gradient(600px circle at var(--gx,50%) var(--gy,30%),rgba(255,255,255,.18),transparent 45%);pointer-events:none;mix-blend-mode:overlay}
+.float-tag{position:absolute;padding:10px 14px;border-radius:12px;background:rgba(18,13,29,.85);border:1px solid var(--line2);backdrop-filter:blur(10px);font-size:13.5px;font-weight:600;white-space:nowrap;transform:translateZ(60px);box-shadow:0 20px 40px -20px #000}
+.float-tag small{display:block;color:var(--mute);font-weight:500;font-size:12px}
+.ft1{top:12%;left:-4%;animation:bob 5s ease-in-out infinite}
+.ft2{top:48%;right:-5%;animation:bob 6s ease-in-out infinite -2s}
+.ft3{bottom:8%;left:8%;animation:bob 5.5s ease-in-out infinite -3s}
+@keyframes bob{50%{translate:0 -10px}}
+@media(max-width:760px){.float-tag{display:none}}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:880px;margin:60px auto 0}
+.stat{padding:22px 10px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);text-align:center}
+.stat b{display:block;font-size:38px;font-weight:900;letter-spacing:-1px;background:linear-gradient(180deg,#fff,var(--pink2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{color:var(--mute);font-size:14px}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+/* sections */
+section{padding:110px 0}
+.eyebrow{display:inline-block;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin-bottom:14px}
+h2{font-size:clamp(34px,4.6vw,54px);font-weight:900;letter-spacing:-1.2px;line-height:1.05;margin-bottom:16px}
+.lead{color:var(--mute);max-width:640px;margin-bottom:54px;font-size:18px}
+.center{text-align:center}.center .lead{margin-left:auto;margin-right:auto}
+
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:26px;overflow:hidden;transition:transform .3s,border-color .3s}
+.card:before{content:"";position:absolute;inset:0;background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(255,111,181,.14),transparent 40%);opacity:0;transition:opacity .3s}
+.card:hover{transform:translateY(-4px);border-color:var(--line2)}
+.card:hover:before{opacity:1}
+.card>*{position:relative}
+.ico{width:46px;height:46px;display:grid;place-items:center;border-radius:13px;font-size:22px;margin-bottom:16px;background:linear-gradient(135deg,rgba(255,111,181,.22),rgba(180,108,255,.18));border:1px solid var(--line2)}
+.card h3{font-size:18px;margin-bottom:6px;letter-spacing:-.2px}
+.card p{color:var(--mute);font-size:15px}
+.big{grid-column:span 2}
+@media(max-width:640px){.big{grid-column:auto}}
+
+/* kits: minecraft-style inventory */
+.inv{background:#c6c6c6;border:4px solid #000;border-radius:6px;box-shadow:inset 4px 4px 0 #fff,inset -4px -4px 0 #555;padding:18px;max-width:760px;margin:0 auto;color:#3f3f3f}
+.inv h4{font:700 16px ui-monospace,Menlo,monospace;margin:0 0 12px 4px;color:#3f3f3f}
+.slots{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.slot{position:relative;aspect-ratio:1;background:#8b8b8b;box-shadow:inset 3px 3px 0 #373737,inset -3px -3px 0 #fff;display:grid;place-items:center;font-size:clamp(26px,4vw,38px);cursor:pointer;transition:background .15s}
+.slot:hover{background:#a5a5a5}
+.slot .tip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) scale(.95);min-width:210px;padding:8px 10px;background:rgba(16,0,16,.95);border:2px solid #2a0a5e;outline:2px solid rgba(16,0,16,.95);border-radius:3px;font:13px/1.5 ui-monospace,Menlo,monospace;color:#aaa;text-align:left;opacity:0;pointer-events:none;transition:.15s;z-index:5}
+.slot .tip b{display:block;color:var(--gold);font-weight:700}
+.slot .tip i{color:#55f;font-style:normal}
+.slot:hover .tip{opacity:1;transform:translateX(-50%) scale(1)}
+.inv .note{margin-top:14px;font:13px ui-monospace,Menlo,monospace;color:#555;text-align:center}
+
+/* maps */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.tab{padding:10px 18px;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--mute);font-weight:600;cursor:pointer;transition:.2s;font-size:15px}
+.tab.on{background:var(--text);color:var(--bg);border-color:transparent}
+.mapview{display:grid;grid-template-columns:1.35fr 1fr;gap:26px;align-items:stretch}
+@media(max-width:860px){.mapview{grid-template-columns:1fr}}
+.mapimg{border-radius:22px;overflow:hidden;border:1px solid var(--line2);min-height:340px;position:relative;background:var(--bg2)}
+.mapimg img{width:100%;height:100%;object-fit:cover;transition:opacity .4s}
+.mapimg .art{position:absolute;inset:0;display:grid;place-items:center;font-size:110px;opacity:0;transition:opacity .4s}
+.mapinfo{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:30px;display:flex;flex-direction:column;gap:14px}
+.mapinfo h3{font-size:28px;letter-spacing:-.5px}
+.mapinfo ul{list-style:none;display:grid;gap:9px}
+.mapinfo li{color:var(--mute);padding-left:24px;position:relative}
+.mapinfo li:before{content:"✿";position:absolute;left:0;color:var(--pink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.chip{padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.06);font-size:13px;color:var(--mute)}
+
+/* ui demo */
+.demo{display:grid;grid-template-columns:1.3fr 1fr;gap:18px}
+@media(max-width:900px){.demo{grid-template-columns:1fr}}
+.screen{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--line2);min-height:420px;background:linear-gradient(180deg,#8ec5ff 0%,#cfe8ff 55%,#6aa84f 55%,#4f8a3a 100%)}
+.screen .sky{position:absolute;inset:0;background:url(cherry-3d.png) center 40%/cover;opacity:.55;filter:saturate(1.2)}
+.bossbar{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:min(440px,86%);text-align:center;font:600 14px ui-monospace,Menlo,monospace;color:#fff;text-shadow:2px 2px 0 #3f3f3f}
+.bossbar .bar{height:10px;margin-top:4px;background:#2d2d2d;border:1px solid #000}
+.bossbar .bar i{display:block;height:100%;width:80%;background:#5f5;transition:width .5s,background .5s}
+.sidebar{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.45);padding:8px 12px;font:13px/1.55 ui-monospace,Menlo,monospace;color:#fff;min-width:200px;text-shadow:1px 1px 0 #222}
+.sidebar .t{text-align:center;color:#fa0;font-weight:700;margin-bottom:4px}
+.g{color:#aaa}.y{color:#ff5}.a{color:#5ff}.gr{color:#5f5}.r{color:#f55}.p{color:#f5f}.o{color:#fa0}.d{color:#666}
+.titletext{position:absolute;left:0;right:0;top:38%;text-align:center;pointer-events:none}
+.titletext .big{font:900 clamp(44px,7vw,76px)/1 system-ui;color:#55ffff;text-shadow:5px 5px 0 rgba(0,0,0,.35);transition:transform .25s,opacity .25s}
+.titletext .small{margin-top:10px;font:600 18px ui-monospace,Menlo,monospace;color:#ff5;text-shadow:2px 2px 0 #3f3f3f}
+.actionbar{position:absolute;bottom:56px;left:0;right:0;text-align:center;font:700 16px ui-monospace,Menlo,monospace;color:#fa0;text-shadow:2px 2px 0 #3f3f3f;opacity:0;transition:opacity .3s}
+.hotbar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:2px;background:rgba(0,0,0,.4);padding:3px;border:2px solid #111}
+.hotbar span{width:34px;height:34px;display:grid;place-items:center;font-size:18px;box-shadow:inset 0 0 0 2px #666}
+.hotbar span.sel{box-shadow:inset 0 0 0 3px #fff}
+.side-cards{display:grid;gap:14px}
+.mini{display:flex;gap:14px;align-items:flex-start}
+.mini .ico{flex:0 0 46px;margin:0}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
+@media(max-width:820px){.steps{grid-template-columns:1fr}}
+.step{counter-increment:s}
+.step:after{content:"0" counter(s);position:absolute;right:20px;top:14px;font-size:64px;font-weight:900;color:rgba(255,255,255,.04)}
+
+/* commands */
+.cmds{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:820px){.cmds{grid-template-columns:1fr}}
+.cmd{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 18px;border-radius:14px;background:var(--panel);border:1px solid var(--line);cursor:pointer;transition:.2s}
+.cmd:hover{border-color:var(--line2);background:rgba(40,28,62,.8)}
+.cmd code{font:600 14px ui-monospace,Menlo,Consolas,monospace;color:var(--aqua)}
+.cmd span{color:var(--mute);font-size:14px;text-align:right}
+.toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,30px);padding:12px 20px;border-radius:12px;background:var(--text);color:var(--bg);font-weight:700;opacity:0;transition:.3s;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* faq */
+.faq{max-width:820px;margin:0 auto;display:grid;gap:10px}
+details{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:0 22px;transition:border-color .2s}
+details[open]{border-color:var(--line2)}
+summary{list-style:none;cursor:pointer;padding:20px 0;font-weight:700;font-size:17px;display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";font-size:24px;color:var(--pink);transition:transform .25s}
+details[open] summary:after{transform:rotate(45deg)}
+details p{color:var(--mute);padding-bottom:20px}
+
+/* download */
+.dlbox{position:relative;border-radius:28px;padding:56px 40px;overflow:hidden;background:linear-gradient(135deg,rgba(255,111,181,.16),rgba(180,108,255,.12) 50%,rgba(255,200,61,.1));border:1px solid var(--line2);text-align:center}
+.dlbox h2{margin-bottom:10px}
+.ver{display:inline-block;padding:5px 12px;border-radius:99px;background:rgba(0,0,0,.3);font-size:13px;color:var(--gold);font-weight:700;margin-bottom:18px}
+.dlgrid{display:grid;grid-template-columns:repeat(2,minmax(0,330px));gap:16px;justify-content:center;margin-top:34px}
+@media(max-width:700px){.dlgrid{grid-template-columns:1fr}}
+.dl{display:flex;flex-direction:column;gap:10px;padding:26px;border-radius:20px;background:rgba(11,8,18,.65);border:1px solid var(--line2);text-align:left}
+.dl h3{font-size:22px}
+.dl p{color:var(--mute);font-size:14.5px}
+.dl .btn{justify-content:center;margin-top:8px}
+.install{margin-top:28px;color:var(--mute);font-size:15px}
+.install code{font-family:ui-monospace,Menlo,monospace;background:rgba(0,0,0,.35);padding:2px 7px;border-radius:6px;color:var(--text)}
+.changelog{max-width:820px;margin:60px auto 0;display:grid;gap:10px}
+.cl{display:flex;gap:16px;padding:16px 20px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.cl b{color:var(--pink2);white-space:nowrap}
+.cl p{color:var(--mute);font-size:15px}
+
+.modes{display:inline-flex;gap:6px;padding:6px;border-radius:16px;background:rgba(0,0,0,.35);border:1px solid var(--line2);margin-top:26px}
+.mode{padding:11px 20px;border-radius:12px;border:0;background:transparent;color:var(--mute);font-weight:700;font-size:15px;font-family:inherit;cursor:pointer;transition:.2s}
+.mode.on{background:var(--text);color:var(--bg)}
+.modedesc{color:var(--mute);margin-top:22px}.modedesc b{color:var(--text)}
+.howto{max-width:560px;margin:26px auto 0;text-align:left;color:var(--mute);display:grid;gap:8px;padding-left:22px}
+.howto code,.modedesc code{font-family:ui-monospace,Menlo,monospace;background:rgba(0,0,0,.35);padding:2px 7px;border-radius:6px;color:var(--text)}
+.gui{border-radius:22px;border:1px solid var(--line2);background:url(cherry-3d.png) center/cover;padding:36px 20px;position:relative;overflow:hidden}
+.gui:before{content:"";position:absolute;inset:0;background:rgba(10,6,18,.55);backdrop-filter:blur(4px)}
+.gwin{position:relative;max-width:640px;margin:0 auto;background:#120d1cf2;border:2px solid #ff6fb53d;box-shadow:0 30px 80px -20px #000;font:13px/1.4 ui-monospace,Menlo,monospace;color:#f1ecfa}
+.ghead{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:linear-gradient(#2a1840,#160f24);border-bottom:1px solid #ffffff22}
+.ghead b{color:#ffc83d}.ghead small{color:#a99dc2;margin-left:8px}
+.gbody{display:grid;grid-template-columns:150px 1fr;min-height:260px}
+.gtabs{border-right:1px solid #ffffff22;padding:10px 8px;display:grid;gap:4px;align-content:start}
+.gtab{padding:8px 10px;color:#a99dc2;cursor:pointer;transition:.15s}
+.gtab.on{background:#3a2456;color:#fff;box-shadow:inset 3px 0 0 #ff6fb5}
+.gmain{padding:12px}
+.crumb{color:#5a4e70;margin-bottom:10px}.crumb .c{color:#ff6fb5}.crumb .d{color:#f1ecfa}
+.gcards{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.gcard{background:#1b1429;padding:8px 10px;display:flex;gap:10px;align-items:center;cursor:pointer;transition:.15s;position:relative}
+.gcard:hover{background:#241a36;outline:1px solid #ff6fb580;transform:translateY(-2px)}
+.gcard:after{content:"";position:absolute;left:0;bottom:0;height:1px;width:0;background:#ff6fb5;transition:width .25s}
+.gcard:hover:after{width:100%}
+.gcard i{font-style:normal;font-size:20px}.gcard b{display:block;color:#ffc83d;font-weight:600}.gcard small{color:#a99dc2}
+@media(max-width:620px){.gbody{grid-template-columns:1fr}.gtabs{grid-auto-flow:column;border-right:0;border-bottom:1px solid #ffffff22}}
+.viewer{position:relative;height:min(68vh,620px);border-radius:26px;overflow:hidden;border:1px solid var(--line2);background:radial-gradient(ellipse at 50% 30%,#2a1d45,#0b0812 75%);box-shadow:0 50px 120px -50px rgba(255,111,181,.5)}
+#vox{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+#vox:active{cursor:grabbing}
+.vload{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:14px;color:var(--mute);font-weight:600;transition:opacity .5s;pointer-events:none}
+.spin{width:38px;height:38px;border-radius:50%;border:3px solid var(--line2);border-top-color:var(--pink);animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.vtabs{position:absolute;top:16px;left:16px;display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100% - 90px)}
+.vt{padding:9px 14px;border-radius:12px;border:1px solid var(--line2);background:rgba(11,8,18,.7);backdrop-filter:blur(10px);color:var(--mute);font-weight:600;font-size:14px;font-family:inherit;cursor:pointer;transition:.2s}
+.vt:hover{color:var(--text)}.vt.on{background:var(--text);color:var(--bg)}
+.vinfo{position:absolute;left:16px;bottom:16px;max-width:340px;padding:14px 16px;border-radius:16px;background:rgba(11,8,18,.75);backdrop-filter:blur(10px);border:1px solid var(--line2);font-size:14px;color:var(--mute)}
+.vinfo b{display:block;color:var(--text);font-size:18px;margin-bottom:2px}
+.vhint{position:absolute;right:16px;bottom:16px;padding:8px 12px;border-radius:12px;background:rgba(11,8,18,.7);font-size:13px;color:var(--mute)}
+.vhint b{color:var(--pink2)}
+.vbtn{position:absolute;top:16px;right:16px;width:42px;height:42px;border-radius:12px;border:1px solid var(--line2);background:rgba(11,8,18,.7);color:var(--text);font-size:20px;cursor:pointer}
+.vbtn.off{opacity:.45}
+@media(max-width:640px){.vinfo{display:none}}
+.gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+@media(max-width:820px){.gallery{grid-template-columns:repeat(2,1fr)}}
+.gallery figure{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(#8ec5ff,#e8f4ff);aspect-ratio:1.15;cursor:pointer;transition:transform .3s}
+.gallery figure:hover{transform:translateY(-4px) scale(1.02)}
+.gallery img{width:100%;height:100%;object-fit:cover}
+.gallery figcaption{position:absolute;left:0;right:0;bottom:0;padding:22px 12px 10px;background:linear-gradient(transparent,rgba(11,8,18,.9));font-weight:700;font-size:14px}
+.cmp{max-width:900px;margin:0 auto;border-radius:22px;overflow:hidden;border:1px solid var(--line2);background:var(--panel)}
+.cmprow{display:grid;grid-template-columns:1.2fr 1fr 1fr;border-top:1px solid var(--line)}
+.cmprow>div{padding:16px 20px;color:var(--mute)}
+.cmprow>div:first-child{color:var(--text);font-weight:600}
+.cmprow.head{border-top:0;background:rgba(255,255,255,.04)}
+.cmprow.head>div{color:var(--text);font-weight:800;font-size:17px}
+.yes{color:var(--green)!important;font-weight:700}.no{color:var(--red)!important}.mid{color:var(--gold)!important}
+@media(max-width:640px){.cmprow>div{padding:12px 10px;font-size:14px}}
+#intro{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;align-content:center;gap:22px;transition:opacity .6s,visibility .6s}
+#intro.done{opacity:0;visibility:hidden}
+.ilogo{display:flex;align-items:center;gap:14px;font-weight:900;font-size:28px;letter-spacing:3px;animation:ipop .8s cubic-bezier(.2,1.4,.4,1)}
+.ilogo img{width:56px;height:56px;border-radius:12px;box-shadow:0 0 40px -6px var(--pink)}
+@keyframes ipop{from{transform:scale(.6);opacity:0}}
+.ibar{width:200px;height:3px;border-radius:3px;background:var(--line2);overflow:hidden}
+.ibar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--gold));animation:ibar 1s ease forwards}
+@keyframes ibar{to{width:100%}}
+footer{padding:50px 0 60px;border-top:1px solid var(--line);color:var(--mute);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="intro"><div class="ilogo"><img class="px" src="icon.png" alt=""><span>DUEL ARENA</span></div><div class="ibar"><i></i></div></div>
+<div class="aurora"><i></i><i></i><i></i></div>
+<div class="grain"></div>
+<canvas id="petals"></canvas>
+
+<nav><div class="wrap">
+  <a class="brand" href="#top"><img class="px" src="icon.png" alt="">Duel Arena</a>
+  <ul class="links">
+    <li><a href="#features">Features</a></li><li><a href="#kits">Kits</a></li><li><a href="#maps">Maps</a></li>
+    <li><a href="#ui">UI</a></li><li><a href="#menu">Menu</a></li><li><a href="#commands">Commands</a></li><li><a href="#editions">Editions</a></li><li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a class="navcta" href="#download">Download</a>
+  <div id="prog"></div>
+</div></nav>
+
+<main id="top">
+<header class="hero"><div class="wrap">
+  <div class="pill reveal">Minecraft <b>26.2+</b> • Fabric & Forge <span>v1.4.1</span></div>
+  <h1 class="reveal">1v1 duels,<br><span class="shine">done right.</span></h1>
+  <p class="sub reveal">Auto-built maps, 10 kits, ranked ELO, chest menus, a live scoreboard and animations for everything. It runs on the server only, so players don't install anything.</p>
+  <div class="btns reveal">
+    <a class="btn main" href="#download">⬇ Download free</a>
+    <a class="btn alt" href="#ui">▶ See it in action</a>
+  </div>
+  <div class="stage reveal">
+    <div class="tilt" id="tilt">
+      <img src="cherry-3d.png" alt="The Cherry Garden arena">
+      <div class="glare"></div>
+      <div class="float-tag ft1">🌸 Cherry Garden<small>49×49 fight field</small></div>
+      <div class="float-tag ft2">⚔ First to 3<small>Ranked • +16 ELO</small></div>
+      <div class="float-tag ft3">✦ 7x COMBO<small>live action bar</small></div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat reveal"><b data-count="10">0</b><span>built-in kits</span></div>
+    <div class="stat reveal"><b data-count="4">0</b><span>maps + your own</span></div>
+    <div class="stat reveal"><b data-count="2">0</b><span>loaders</span></div>
+    <div class="stat reveal"><b data-count="0">0</b><span>client mods needed</span></div>
+  </div>
+</div></header>
+
+<section id="features"><div class="wrap">
+  <div class="center"><span class="eyebrow reveal">Features</span>
+  <h2 class="reveal">Everything a duel server needs</h2>
+  <p class="lead reveal">Drop the jar in your mods folder and it's ready. Vanilla clients join as normal.</p></div>
+  <div class="grid">
+    <div class="card big reveal"><div class="ico">⚔</div><h3>Challenge anyone in three clicks</h3><p>Type <code style="color:var(--aqua)">/duel</code>, pick a player, a kit, a map and how many rounds. They get a big on-screen title and clickable Accept / Deny.</p></div>
+    <div class="card reveal"><div class="ico">🏆</div><h3>Ranked queue</h3><p>Matchmaking by closest ELO, ranks from Bronze to Champion, streaks and a leaderboard.</p></div>
+    <div class="card reveal"><div class="ico">🗺</div><h3>Auto-built arenas</h3><p>Each duel gets its own arena far from spawn. Rounds reset in about 10 ms.</p></div>
+    <div class="card reveal"><div class="ico">📦</div><h3>Shulker kits</h3><p>Fill a shulker, hold it, run <code style="color:var(--aqua)">/duel kit save</code>. Armor and offhand are set for you.</p></div>
+    <div class="card reveal"><div class="ico">🏗</div><h3>Your own maps</h3><p>Build anything, mark two corners and two spawns, save it.</p></div>
+    <div class="card big reveal"><div class="ico">📊</div><h3>A HUD that feels like a real game mode</h3><p>Opponent health bar that changes colour, a sidebar with round pips, timer, pops and damage, combo counters, VICTORY / DEFEAT titles and fireworks.</p></div>
+    <div class="card reveal"><div class="ico">👁</div><h3>Spectate</h3><p>Watch any live duel from the menu, with a spectator scoreboard.</p></div>
+    <div class="card reveal"><div class="ico">🛡</div><h3>Nothing gets lost</h3><p>Inventories come back after every duel, even on disconnect or server stop.</p></div>
+    <div class="card reveal"><div class="ico">📜</div><h3>Stats & history</h3><p>ELO, win rate, streaks, totem pops and your last duels, saved to disk.</p></div>
+  </div>
+</div></section>
+
+<section id="kits"><div class="wrap">
+  <div class="center"><span class="eyebrow reveal">Kits</span>
+  <h2 class="reveal">10 kits, ready to fight</h2>
+  <p class="lead reveal">Hover a slot to see what's inside. Make as many custom kits as you want from a shulker box.</p></div>
+  <div class="inv reveal">
+    <h4>Choose a Kit</h4>
+    <div class="slots">
+      <div class="slot">💎<div class="tip"><b>Crystal PvP</b>Netherite, crystals, anchors,<br>obsidian, a stack of totems<br><i>/duel queue crystal</i></div></div>
+      <div class="slot">🗡<div class="tip"><b>Basic PvP</b>Iron gear, sword, axe, bow<br>Simple and fair<br><i>/duel queue basic</i></div></div>
+      <div class="slot">⚔<div class="tip"><b>Sword</b>Diamond armor and a sword<br>Pure aim and timing<br><i>/duel queue sword</i></div></div>
+      <div class="slot">🪓<div class="tip"><b>Axe & Shield</b>Axe, shield, crossbow<br>Break shields, land crits<br><i>/duel queue axe</i></div></div>
+      <div class="slot">🧪<div class="tip"><b>Netherite Pot</b>Netherite + healing potions,<br>pearls and gapples<br><i>/duel queue nethpot</i></div></div>
+      <div class="slot">❤<div class="tip"><b>Diamond Pot</b>Diamond gear and a full<br>inventory of instant health<br><i>/duel queue pot</i></div></div>
+      <div class="slot">🪣<div class="tip"><b>UHC</b>Buckets, cobble, bow,<br>golden apples<br><i>/duel queue uhc</i></div></div>
+      <div class="slot">🌍<div class="tip"><b>SMP</b>Totems, webs, wind charges,<br>crossbow, pearls<br><i>/duel queue smp</i></div></div>
+      <div class="slot">🔨<div class="tip"><b>Mace</b>Wind Burst mace, wind<br>charges and an elytra<br><i>/duel queue mace</i></div></div>
+      <div class="slot">🏹<div class="tip"><b>Archer</b>Power V bow, multishot<br>crossbow, light armor<br><i>/duel queue archer</i></div></div>
+    </div>
+    <div class="note">+ your own shulker kits</div>
+  </div>
+</div></section>
+
+<section id="maps"><div class="wrap">
+  <div class="center"><span class="eyebrow reveal">Maps • Live 3D</span>
+  <h2 class="reveal">Walk around the arenas</h2>
+  <p class="lead reveal">These are the real maps, exported block by block from the mod. Drag to rotate, scroll to zoom.</p></div>
+  <div class="viewer reveal" id="viewer">
+    <canvas id="vox"></canvas>
+    <div class="vload" id="vload"><div class="spin"></div>Loading blocks…</div>
+    <div class="vtabs" id="vtabs">
+      <button class="vt on" data-m="cherry">🌸 Cherry Garden</button>
+      <button class="vt" data-m="inferno">🔥 Inferno</button>
+      <button class="vt" data-m="end">🌌 The End</button>
+      <button class="vt" data-m="classic">⬛ Classic</button>
+    </div>
+    <div class="vinfo" id="vinfo"></div>
+    <div class="vhint">🖱 drag • scroll • <b id="vcount">0</b> blocks</div>
+    <button class="vbtn" id="vspin" title="Auto-rotate">⟳</button>
+  </div>
+  <div class="gallery">
+    <figure class="reveal"><img src="iso-cherry.png" alt=""><figcaption>Cherry Garden</figcaption></figure>
+    <figure class="reveal"><img src="iso-inferno.png" alt=""><figcaption>Inferno</figcaption></figure>
+    <figure class="reveal"><img src="iso-end.png" alt=""><figcaption>The End</figcaption></figure>
+    <figure class="reveal"><img src="iso-classic.png" alt=""><figcaption>Classic</figcaption></figure>
+  </div>
+  <p class="center" style="color:var(--mute);margin-top:22px">Plus your own maps: build anything and save it with <code style="color:var(--aqua)">/duel arena save</code>.</p>
+</div></section>
+
+<section id="ui"><div class="wrap">
+  <div class="center"><span class="eyebrow reveal">UI & animations</span>
+  <h2 class="reveal">Feels like a real game mode</h2>
+  <p class="lead reveal">Everything runs on the server using vanilla titles, boss bars, sidebars, particles and sounds. Here's a live replay of a round:</p></div>
+  <div class="demo">
+    <div class="screen reveal" id="screen">
+      <div class="sky"></div>
+      <div class="bossbar"><div id="bbtext"><b>Steve</b> <span class="gr" id="bbhp">20.0❤</span> <span class="p">• <span id="bbtot">8</span> totems •</span> <span class="o">1 - 1</span></div><div class="bar"><i id="bbfill"></i></div></div>
+      <div class="sidebar">
+        <div class="t">⚔ DUEL ARENA ⚔</div>
+        <div><span class="g">Kit</span> <span class="a">Crystal PvP</span></div>
+        <div><span class="g">Map</span> <span class="gr">Cherry Garden</span></div>
+        <div><span class="g">Round</span> <span class="y">3 (first to 2)</span></div>
+        <div><span class="g">Time</span> <span id="sbtime">5:00</span></div><br>
+        <div><span class="gr">You </span> <span class="o">●</span> <span class="d" id="pipme">○</span></div>
+        <div><span class="r">Them</span> <span class="o">●</span> <span class="d">○</span></div><br>
+        <div><span class="g">Pops</span> <span class="p" id="sbpops">0 you • 0 them</span></div>
+        <div class="d"><i>by v1sion</i></div>
+      </div>
+      <div class="titletext"><div class="big" id="tbig"></div><div class="small" id="tsmall"></div></div>
+      <div class="actionbar" id="abar"></div>
+      <div class="hotbar"><span class="sel">⚔</span><span>💎</span><span>⬛</span><span>⚓</span><span>✨</span><span>🍎</span><span>🟣</span><span>🧪</span><span>🗿</span></div>
+    </div>
+    <div class="side-cards">
+      <div class="card mini reveal"><div class="ico">⏱</div><div><h3>Countdown</h3><p>Shrinking particle rings, orbiting sparkles, rising notes and » 3 « titles. Players are frozen smoothly, without rubber-banding.</p></div></div>
+      <div class="card mini reveal"><div class="ico">⚡</div><div><h3>Kills & rounds</h3><p>Harmless lightning, soul flames, spawn beams and personal ROUND WON / LOST titles.</p></div></div>
+      <div class="card mini reveal"><div class="ico">🎆</div><div><h3>Victory</h3><p>VICTORY with the ELO you gained, fireworks, totem particles and a full match summary.</p></div></div>
+      <div class="card mini reveal"><div class="ico">🧰</div><div><h3>Two kinds of menu</h3><p>A custom animated screen when you have the mod, and chest menus for vanilla players on servers.</p></div></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="menu"><div class="wrap">
+  <div class="center"><span class="eyebrow reveal">New in 1.4</span>
+  <h2 class="reveal">A real duel menu</h2>
+  <p class="lead reveal">If the mod is in your game too, press <code style="color:var(--aqua)">U</code> or type <code style="color:var(--aqua)">/duel</code> to open a custom screen: animated cards, player faces, kit icons, and a challenge in four clicks. Try it:</p></div>
+  <div class="gui reveal"><div class="gwin">
+    <div class="ghead"><span>💎 <b>DUEL ARENA</b><small>by v1sion</small></span><span style="color:#ff5a5a">✕</span></div>
+    <div class="gbody">
+      <div class="gtabs"><div class="gtab on" data-g="duel">⚔ Duel</div><div class="gtab" data-g="ranked">🏆 Ranked</div><div class="gtab" data-g="spec">👁 Spectate</div><div class="gtab" data-g="stats">★ Stats</div></div>
+      <div class="gmain"><div class="crumb" id="gcrumb"></div><div class="gcards" id="gcards"></div></div>
+    </div>
+  </div></div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="center"><span class="eyebrow reveal">Setup</span><h2 class="reveal">Running in a minute</h2><p class="lead reveal">No config needed. You can still tweak everything later.</p></div>
+  <div class="steps">
+    <div class="card step reveal"><div class="ico">⬇</div><h3>Download</h3><p>Grab the Fabric or Forge jar below.</p></div>
+    <div class="card step reveal"><div class="ico">📁</div><h3>Drop it in</h3><p>Put it in your server's <code style="color:var(--aqua)">mods</code> folder and start the server.</p></div>
+    <div class="card step reveal"><div class="ico">⚔</div><h3>Fight</h3><p>Type <code style="color:var(--aqua)">/duel</code> in game. Settings live in <code style="color:var(--aqua)">config/duelarena</code>.</p></div>
+  </div>
+</div></section>
+
+<section id="commands"><div class="wrap">
+  <span class="eyebrow reveal">Commands</span>
+  <h2 class="reveal">One command to start</h2>
+  <p class="lead reveal">Most players only need <code style="color:var(--aqua)">/duel</code>. Click a command to copy it.</p>
+  <div class="cmds">
+    <div class="cmd reveal"><code>/duel</code><span>Open the menu</span></div>
+    <div class="cmd reveal"><code>/duel &lt;player&gt;</code><span>Challenge someone</span></div>
+    <div class="cmd reveal"><code>/duel &lt;player&gt; &lt;kit&gt; &lt;firstTo&gt; &lt;map&gt;</code><span>Challenge directly</span></div>
+    <div class="cmd reveal"><code>/duel accept</code><span>Accept a challenge</span></div>
+    <div class="cmd reveal"><code>/duel queue &lt;kit&gt;</code><span>Ranked matchmaking</span></div>
+    <div class="cmd reveal"><code>/duel rematch</code><span>Run it back</span></div>
+    <div class="cmd reveal"><code>/duel spectate &lt;player&gt;</code><span>Watch a duel</span></div>
+    <div class="cmd reveal"><code>/duel leave</code><span>Forfeit / stop watching</span></div>
+    <div class="cmd reveal"><code>/duel stats</code><span>Your ELO & record</span></div>
+    <div class="cmd reveal"><code>/duel top</code><span>Leaderboard</span></div>
+    <div class="cmd reveal"><code>/duel kit save &lt;name&gt;</code><span>Shulker → custom kit</span></div>
+    <div class="cmd reveal"><code>/duel arena save &lt;name&gt;</code><span>Save your own map</span></div>
+  </div>
+</div></section>
+
+<section id="faq"><div class="wrap">
+  <div class="center"><span class="eyebrow reveal">FAQ</span><h2 class="reveal">Questions</h2></div>
+  <div class="faq">
+    <details class="reveal"><summary>Do players need to install the mod?</summary><p>Not on a server: vanilla 26.2 players can join and use the chest menus. Install it in your game too and you get the custom duel menu.</p></details>
+    <details class="reveal"><summary>How do I play with just a friend?</summary><p>Download the <b>Friends Edition</b>. You both install it, one opens a singleplayer world and clicks <b>Open to LAN</b>, the other joins, then press <code>U</code> to challenge. The Friends Edition will not run on dedicated servers. Use the Server Edition for those.</p></details>
+    <details class="reveal"><summary>Will I lose my items?</summary><p>No. Your inventory, XP, effects, health and position are saved before the duel and restored after, even if you disconnect or the server stops.</p></details>
+    <details class="reveal"><summary>Where are the maps built?</summary><p>Far away in the overworld (around x = 1,000,000), so they never touch your builds. Each map is built once, then reused.</p></details>
+    <details class="reveal"><summary>Can I add my own kits and maps?</summary><p>Yes. Hold a shulker and run <code>/duel kit save name</code> for a kit. For a map, build it, mark it with <code>/duel arena pos1/pos2/spawn1/spawn2</code> and run <code>/duel arena save name</code>.</p></details>
+    <details class="reveal"><summary>What can I configure?</summary><p>Countdown length, round time limit, ELO settings, default kit, fireworks, the health bar and ranked announcements, all in <code>config/duelarena/config.json</code>.</p></details>
+  </div>
+</div></section>
+
+<section id="editions"><div class="wrap">
+  <div class="center"><span class="eyebrow reveal">Two editions</span><h2 class="reveal">Pick the right one</h2>
+  <p class="lead reveal">Same duels, two ways to play.</p></div>
+  <div class="cmp reveal">
+    <div class="cmprow head"><div></div><div>🖥 Server Edition</div><div>👥 Friends Edition</div></div>
+    <div class="cmprow"><div>Who installs it</div><div>Only the server</div><div>You and your friend</div></div>
+    <div class="cmprow"><div>Where it runs</div><div>Dedicated servers</div><div>Singleplayer + Open to LAN</div></div>
+    <div class="cmprow"><div>Works on real servers</div><div class="yes">✔</div><div class="no">✘ turns itself off</div></div>
+    <div class="cmprow"><div>Vanilla players can join</div><div class="yes">✔</div><div class="no">✘</div></div>
+    <div class="cmprow"><div>Custom duel menu (U)</div><div class="mid">if a player installs it too</div><div class="yes">✔</div></div>
+    <div class="cmprow"><div>Maps, kits, ELO, animations</div><div class="yes">✔</div><div class="yes">✔</div></div>
+  </div>
+</div></section>
+
+<section id="download"><div class="wrap">
+  <div class="dlbox reveal">
+    <div class="ver">Version 1.4.1 • Minecraft 26.2+</div>
+    <h2>Get Duel Arena</h2>
+    <p style="color:var(--mute)">Free. Put it in your server's mods folder and you're done.</p>
+    <div class="modes" id="modes">
+      <button class="mode on" data-mode="server">🖥 For a server</button>
+      <button class="mode" data-mode="friend">👥 Just me &amp; a friend</button>
+    </div>
+    <div class="modepane" id="pane-server">
+      <p class="modedesc"><b>Server Edition</b>: install it <b>only on the server</b>. Players join with plain vanilla Minecraft and use the chest menus.</p>
+      <div class="dlgrid">
+        <div class="dl"><h3>Server Edition • Fabric</h3><p>Fabric Loader 0.19+ and Fabric API on the server.</p><a class="btn main" href="DuelArena-1.4.1-SERVER-fabric-26.2.jar" download>⬇ Download</a></div>
+        <div class="dl"><h3>Server Edition • Forge</h3><p>Forge 65.1+ on the server.</p><a class="btn main" href="DuelArena-1.4.1-SERVER-forge-26.2.jar" download>⬇ Download</a></div>
+      </div>
+      <ol class="howto"><li>Put the jar in the server's <code>mods</code> folder</li><li>Start the server</li><li>Players type <code>/duel</code></li></ol>
+    </div>
+    <div class="modepane" id="pane-friend" hidden>
+      <p class="modedesc"><b>Friends Edition</b>: just for you and a friend. Works in <b>singleplayer with Open to LAN</b> only, and turns itself off on real servers. You both get the custom duel menu (press <code>U</code>).</p>
+      <div class="dlgrid">
+        <div class="dl"><h3>Friends Edition • Fabric</h3><p>Fabric Loader 0.19+ and Fabric API in your game.</p><a class="btn main" href="DuelArena-1.4.1-FRIENDS-fabric-26.2.jar" download>⬇ Download</a></div>
+        <div class="dl"><h3>Friends Edition • Forge</h3><p>Forge 65.1+ in your game.</p><a class="btn main" href="DuelArena-1.4.1-FRIENDS-forge-26.2.jar" download>⬇ Download</a></div>
+      </div>
+      <ol class="howto"><li>You <b>and</b> your friend put the jar in <code>.minecraft/mods</code></li><li>One of you opens a singleplayer world and clicks <b>Open to LAN</b></li><li>The other joins the LAN world, then press <code>U</code> and duel</li></ol>
+    </div>
+    <p class="install">Two separate downloads: the <b>Server Edition</b> for real servers, the <b>Friends Edition</b> for singleplayer + LAN only.</p>
+  </div>
+  <div class="changelog">
+    <div class="cl reveal"><b>1.4.1</b><p>Two downloads: Server Edition for real servers, and Friends Edition for singleplayer + LAN only. New custom duel menu (press U).</p></div>
+    <div class="cl reveal"><b>1.3.2</b><p>Smooth countdown freeze with no spawn rubber-banding. Removed the kit editor.</p></div>
+    <div class="cl reveal"><b>1.3.1</b><p>Bigger 49×49 fight field on Cherry Garden.</p></div>
+    <div class="cl reveal"><b>1.3.0</b><p>Chest menus, live sidebar, animations, real Minecraft trees, mountains and new pagodas.</p></div>
+    <div class="cl reveal"><b>1.2.0</b><p>New Cherry Garden map, 10 kits, health bar HUD, match history, config file.</p></div>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><div>Duel Arena by <b style="color:var(--text)">v1sion</b></div><div>Not affiliated with Mojang or Microsoft.</div></div></footer>
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- cherry petals: canvas, depth, 3D flutter, wind gusts, mouse breeze ---------- */
+(() => {
+  const c = document.getElementById('petals'), x = c.getContext('2d');
+  let W, H, dpr, petals = [], wind = 0, windT = 0, mouse = {x: -999, y: -999, vx: 0};
+  const resize = () => { dpr = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; c.width = W * dpr; c.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0); };
+  resize(); addEventListener('resize', resize);
+  addEventListener('mousemove', e => { mouse.vx = e.clientX - mouse.x; mouse.x = e.clientX; mouse.y = e.clientY; });
+  const cols = ['#ffb7d5', '#ff9ccc', '#ffc4de', '#ff8dc1', '#ffd6e8', '#ff7ab8'];
+  const make = (top) => {
+    const z = Math.random();            // 0 = far, 1 = near
+    return {x: Math.random() * W, y: top ? -20 - Math.random() * H : Math.random() * H, z,
+      s: 5 + z * 11, vy: .35 + z * 1.1, vx: -.2 + Math.random() * .4,
+      rot: Math.random() * 6.28, vr: (Math.random() - .5) * .04, flip: Math.random() * 6.28, vf: .02 + Math.random() * .05,
+      sway: Math.random() * 6.28, col: cols[(Math.random() * cols.length) | 0], a: .35 + z * .55};
+  };
+  const N = reduce ? 0 : Math.min(90, Math.round(innerWidth / 16));
+  for (let i = 0; i < N; i++) petals.push(make(false));
+  const draw = p => {
+    x.save();
+    x.translate(p.x, p.y);
+    x.rotate(p.rot);
+    x.scale(Math.cos(p.flip), 1);        // fake 3D flip
+    x.globalAlpha = p.a;
+    const s = p.s;
+    const g = x.createLinearGradient(-s, 0, s, 0);
+    g.addColorStop(0, p.col); g.addColorStop(1, '#fff0f6');
+    x.fillStyle = g;
+    x.beginPath();                        // cherry petal with a notch
+    x.moveTo(0, -s);
+    x.bezierCurveTo(s * .9, -s * .9, s * .9, s * .6, 0, s);
+    x.bezierCurveTo(-s * .9, s * .6, -s * .9, -s * .9, -s * .18, -s * .82);
+    x.lineTo(0, -s * .62);
+    x.closePath();
+    x.fill();
+    x.restore();
+  };
+  const tick = () => {
+    x.clearRect(0, 0, W, H);
+    windT += .004;
+    wind = Math.sin(windT) * .8 + Math.sin(windT * 3.7) * .35;   // gusts
+    mouse.vx *= .9;
+    for (const p of petals) {
+      p.sway += .02;
+      p.x += p.vx + wind * (.4 + p.z) + Math.sin(p.sway) * .4 * (.5 + p.z);
+      p.y += p.vy;
+      p.rot += p.vr; p.flip += p.vf;
+      const dx = p.x - mouse.x, dy = p.y - mouse.y, d2 = dx * dx + dy * dy;
+      if (d2 < 14000) { const f = (14000 - d2) / 14000; p.x += dx / 40 * f + mouse.vx * .05 * f; p.y += dy / 60 * f; }
+      if (p.y > H + 20 || p.x < -40 || p.x > W + 40) Object.assign(p, make(true), {y: -20});
+      draw(p);
+    }
+    requestAnimationFrame(tick);
+  };
+  if (N) tick();
+})();
+
+/* ---------- scroll reveal, nav progress, active link ---------- */
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), {threshold: .12});
+document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 5) * 70 + 'ms'; io.observe(el); });
+const prog = document.getElementById('prog'), links = [...document.querySelectorAll('.links a')];
+addEventListener('scroll', () => {
+  prog.style.width = (scrollY / (document.body.scrollHeight - innerHeight) * 100) + '%';
+  let cur = '';
+  document.querySelectorAll('section[id]').forEach(s => { if (scrollY + 140 >= s.offsetTop) cur = s.id; });
+  links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + cur));
+}, {passive: true});
+
+/* ---------- counters ---------- */
+const cio = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  const el = e.target, to = +el.dataset.count; let t0 = null;
+  const step = ts => { t0 ??= ts; const k = Math.min(1, (ts - t0) / 1200); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step); cio.unobserve(el);
+}), {threshold: .6});
+document.querySelectorAll('[data-count]').forEach(el => cio.observe(el));
+
+/* ---------- 3D tilt on hero image ---------- */
+const tilt = document.getElementById('tilt');
+if (!reduce && matchMedia('(hover:hover)').matches) {
+  tilt.parentElement.addEventListener('mousemove', e => {
+    const r = tilt.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    tilt.style.transform = `rotateY(${(px - .5) * 10}deg) rotateX(${(.5 - py) * 8}deg)`;
+    tilt.style.setProperty('--gx', px * 100 + '%'); tilt.style.setProperty('--gy', py * 100 + '%');
+  });
+  tilt.parentElement.addEventListener('mouseleave', () => tilt.style.transform = '');
+}
+
+/* ---------- card spotlight ---------- */
+document.querySelectorAll('.card').forEach(c => c.addEventListener('mousemove', e => {
+  const r = c.getBoundingClientRect();
+  c.style.setProperty('--mx', e.clientX - r.left + 'px'); c.style.setProperty('--my', e.clientY - r.top + 'px');
+}));
+
+/* ---------- live UI replay ---------- */
+(() => {
+  const big = document.getElementById('tbig'), small = document.getElementById('tsmall'), ab = document.getElementById('abar'),
+        fill = document.getElementById('bbfill'), hp = document.getElementById('bbhp'), tot = document.getElementById('bbtot'),
+        time = document.getElementById('sbtime'), pops = document.getElementById('sbpops'), pip = document.getElementById('pipme');
+  const T = (t, s, col) => { big.textContent = t; small.textContent = s || ''; big.style.color = col || '#55ffff'; big.style.transform = 'scale(1.15)'; setTimeout(() => big.style.transform = 'scale(1)', 120); };
+  const setHp = v => { fill.style.width = v / 20 * 100 + '%'; fill.style.background = v > 10 ? '#5f5' : v > 5 ? '#fe5' : '#f55'; hp.textContent = v.toFixed(1) + '❤'; hp.className = v > 10 ? 'gr' : v > 5 ? 'y' : 'r'; };
+  const A = t => { ab.textContent = t; ab.style.opacity = t ? 1 : 0; };
+  const script = [
+    [0, () => { setHp(20); tot.textContent = 8; pops.textContent = '0 you • 0 them'; pip.textContent = '○'; pip.className = 'd'; time.textContent = 'starting'; A(''); T('» 3 «', '▮▮▮', '#55ffff'); }],
+    [900, () => T('» 2 «', '▮▮▯', '#ffaa00')], [1800, () => T('» 1 «', '▮▯▯', '#ff5555')],
+    [2700, () => { T('⚔ FIGHT ⚔', 'Crystal PvP • Cherry Garden', '#ff5555'); time.textContent = '5:00'; }],
+    [3900, () => { T('', ''); setHp(14.5); A('✦ 3x COMBO ✦'); time.textContent = '4:58'; }],
+    [4700, () => { setHp(9); A('✦ 5x COMBO ✦'); }],
+    [5500, () => { setHp(20); tot.textContent = 7; pops.textContent = '0 you • 1 them'; A('💥 Steve popped a totem (1)'); time.textContent = '4:55'; }],
+    [6500, () => { setHp(11); A('✦ 7x COMBO ✦'); }],
+    [7300, () => { setHp(3.5); A('✦ 9x COMBO ✦'); time.textContent = '4:51'; }],
+    [8200, () => { setHp(0); A(''); pip.textContent = '●'; pip.className = 'o'; T('★ VICTORY ★', '+16 ELO  •  2 - 1', '#ffaa00'); }],
+    [10600, () => A('Returning in 1...')]
+  ];
+  let started = false;
+  const run = () => { script.forEach(([t, f]) => setTimeout(f, t)); setTimeout(run, 12000); };
+  new IntersectionObserver(es => { if (es[0].isIntersecting && !started) { started = true; run(); } }, {threshold: .3}).observe(document.getElementById('screen'));
+})();
+
+/* ---------- download modes ---------- */
+document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.mode').forEach(x => x.classList.toggle('on', x === b));
+  document.getElementById('pane-server').hidden = b.dataset.mode !== 'server';
+  document.getElementById('pane-friend').hidden = b.dataset.mode !== 'friend';
+}));
+
+/* ---------- interactive menu mock ---------- */
+(() => {
+  const K = [['💎','Crystal PvP','Netherite, crystals, totems'],['🗡','Basic PvP','Iron gear, sword, bow'],['⚔','Sword','Diamond armor + sword'],['🪓','Axe & Shield','Axe, shield, crossbow'],['🧪','Netherite Pot','Netherite + potions'],['❤','Diamond Pot','Instant health spam'],['🪣','UHC','Buckets, cobble, bow'],['🔨','Mace','Wind burst + elytra']];
+  const M = [['👁','Random','Let fate decide'],['🌸','Cherry Garden','Giant tree, pagodas'],['🔥','Inferno','Nether island'],['🌌','The End','Obsidian pillars']];
+  const P = [['🙂','Steve'],['😎','Alex'],['🤠','Notch_fan'],['🥷','xX_crystal_Xx']];
+  const cards = document.getElementById('gcards'), crumb = document.getElementById('gcrumb');
+  let tab = 'duel', step = 0, pick = {};
+  const crumbs = () => crumb.innerHTML = ['Player','Kit','Map','Rounds'].map((c,i) => `<span class="${i===step?'c':i<step?'d':''}">${i+1} ${c}</span>`).join(' › ');
+  const card = (i,t,s,on) => { const d = document.createElement('div'); d.className = 'gcard'; d.innerHTML = `<i>${i}</i><div><b>${t}</b><small>${s}</small></div>`; d.onclick = on; cards.appendChild(d); };
+  const draw = () => {
+    cards.innerHTML = ''; crumb.innerHTML = '';
+    if (tab === 'duel') {
+      crumbs();
+      if (step === 0) P.forEach(p => card(p[0], p[1], 'Click to challenge', () => { pick.p = p[1]; step = 1; draw(); }));
+      if (step === 1) K.forEach(k => card(k[0], k[1], k[2], () => { pick.k = k[1]; step = 2; draw(); }));
+      if (step === 2) M.forEach(m => card(m[0], m[1], m[2], () => { pick.m = m[1]; step = 3; draw(); }));
+      if (step === 3) [1,2,3,5].forEach(r => card('🏁', 'First to ' + r, pick.k + ' • ' + pick.m, () => {
+        cards.innerHTML = `<div class="gcard" style="grid-column:span 2;justify-content:center;background:#ff6fb5"><b style="color:#1a0d16">⚔ Challenge sent to ${pick.p}!</b></div>`;
+        setTimeout(() => { step = 0; draw(); }, 1600); }));
+    } else if (tab === 'ranked') K.forEach(k => card(k[0], k[1], 'Join queue', () => {}));
+    else if (tab === 'spec') P.slice(0,2).forEach(p => card(p[0], p[1], 'Spectate', () => {}));
+    else [['👤','My stats','ELO, wins, streaks'],['🏆','Leaderboard','Top 10'],['🕒','History','Last 10 duels'],['🔁','Rematch','Run it back']].forEach(x => card(x[0], x[1], x[2], () => {}));
+  };
+  document.querySelectorAll('.gtab').forEach(t => t.onclick = () => { document.querySelectorAll('.gtab').forEach(x => x.classList.toggle('on', x === t)); tab = t.dataset.g; step = 0; draw(); });
+  draw();
+})();
+
+/* ---------- copy commands ---------- */
+const toast = document.getElementById('toast');
+document.querySelectorAll('.cmd').forEach(c => c.addEventListener('click', () => {
+  navigator.clipboard?.writeText(c.querySelector('code').textContent);
+  toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1200);
+}));
+</script>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.170.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const META = {"cherry": {"w": 129, "d": 129, "floor": 30, "palette": [15892389, 7368816, 3746083, 9923917, 8368696, 31744, 13742497, 10987431, 8476209, 6579300, 16777215, 9402184, 9321518, 16247203, 6704179, 16445005, 16776437, 4210943, 6085589, 10505550, 6780213, 10040115, 5725276, 10791096]}, "inferno": {"w": 73, "d": 73, "floor": 30, "palette": [3746083, 7368816, 1644825, 7340544, 12398641, 6704179, 1474182, 5013401, 16711680, 10040115, 9715553, 1356933, 3837580, 10987431]}, "end": {"w": 73, "d": 73, "floor": 30, "palette": [3746083, 7368816, 1644825, 16247203, 11685080, 8339378]}, "classic": {"w": 73, "d": 73, "floor": 30, "palette": [3746083, 7368816, 1644825]}};
+const INFO = {
+  cherry: ['Cherry Garden', 'Floating island in bloom: 49×49 field, giant cherry tree, pagodas, torii gates, snowy peaks and a pond.'],
+  inferno: ['Inferno', 'Nether island with huge fungi, basalt spires, lava pools and soul-lantern gates.'],
+  end: ['The End', 'End stone and purpur over the void, obsidian pillars with end rods and chorus trees.'],
+  classic: ['Classic', 'A clean obsidian box. No distractions, just the fight.']
+};
+const SKY = { cherry: [0x9fd3ff, 0xfde7f1], inferno: [0x2a0905, 0x7a1d0e], end: [0x05030c, 0x2b1c55], classic: [0x0d0a14, 0x2b2238] };
+const wrap = document.getElementById('viewer'), canvas = document.getElementById('vox'), load = document.getElementById('vload');
+let renderer, scene, camera, controls, mesh, petals, started = false, spin = true;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+} catch (e) { load.innerHTML = '<img src="iso-cherry.png" style="max-height:90%;border-radius:16px">'; }
+if (renderer) {
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(38, 1, 1, 2000);
+  controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true; controls.dampingFactor = .07;
+  controls.minDistance = 40; controls.maxDistance = 420; controls.maxPolarAngle = Math.PI * .49;
+  controls.autoRotate = true; controls.autoRotateSpeed = .7;
+  controls.addEventListener('start', () => { controls.autoRotate = false; });
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xb59ac7, 1.9));
+  scene.add(new THREE.AmbientLight(0xffffff, .35));
+  const sun = new THREE.DirectionalLight(0xfff4e6, 2.6);
+  sun.position.set(120, 180, 80); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -110, right: 110, top: 110, bottom: -110, near: 10, far: 500 });
+  scene.add(sun);
+  // falling petals in 3D
+  const pg = new THREE.BufferGeometry(), N = 500, pos = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) { pos[i*3] = (Math.random() - .5) * 220; pos[i*3+1] = Math.random() * 120; pos[i*3+2] = (Math.random() - .5) * 220; }
+  pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  petals = new THREE.Points(pg, new THREE.PointsMaterial({ color: 0xffa6cf, size: 1.4, transparent: true, opacity: .85 }));
+  scene.add(petals);
+  const resize = () => { const w = wrap.clientWidth, h = wrap.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); };
+  addEventListener('resize', resize); resize();
+  const cache = {};
+  async function show(name) {
+    load.style.opacity = 1;
+    document.querySelectorAll('.vt').forEach(b => b.classList.toggle('on', b.dataset.m === name));
+    document.getElementById('vinfo').innerHTML = `<b>${INFO[name][0]}</b>${INFO[name][1]}`;
+    const buf = cache[name] ??= new Uint8Array(await (await fetch('voxels-' + name + '.bin')).arrayBuffer());
+    if (mesh) { scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); }
+    const m = META[name], n = buf.length / 4;
+    const geo = new THREE.BoxGeometry(1, 1, 1);
+    mesh = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial(), n);
+    mesh.castShadow = mesh.receiveShadow = true;
+    const mat = new THREE.Matrix4(), col = new THREE.Color();
+    const cx = m.w / 2, cz = m.d / 2;
+    for (let i = 0; i < n; i++) {
+      const x = buf[i*4], y = buf[i*4+1], z = buf[i*4+2], c = m.palette[buf[i*4+3]];
+      mat.makeTranslation(x - cx, y - m.floor, z - cz);
+      mesh.setMatrixAt(i, mat);
+      col.setHex(c);
+      const shade = .92 + ((x * 7 + y * 13 + z * 3) % 9) / 60;   // subtle per-block variation
+      col.multiplyScalar(shade);
+      mesh.setColorAt(i, col);
+    }
+    mesh.instanceMatrix.needsUpdate = true; mesh.instanceColor.needsUpdate = true;
+    scene.add(mesh);
+    const [top, bottom] = SKY[name];
+    scene.background = null;
+    wrap.style.background = `linear-gradient(#${top.toString(16).padStart(6,'0')}, #${bottom.toString(16).padStart(6,'0')})`;
+    scene.fog = new THREE.Fog(bottom, 260, 620);
+    petals.visible = name === 'cherry';
+    petals.material.color.setHex(name === 'cherry' ? 0xffa6cf : 0xffffff);
+    const r = Math.max(m.w, m.d);
+    camera.position.set(r * 1.05, r * .75, r * 1.05);
+    controls.target.set(0, name === 'cherry' ? 4 : -4, 0);
+    controls.autoRotate = spin;
+    document.getElementById('vcount').textContent = n.toLocaleString();
+    load.style.opacity = 0;
+  }
+  document.querySelectorAll('.vt').forEach(b => b.addEventListener('click', () => show(b.dataset.m)));
+  document.querySelectorAll('.gallery figure').forEach((f, i) => f.addEventListener('click', () => { show(['cherry','inferno','end','classic'][i]); wrap.scrollIntoView({ behavior: 'smooth', block: 'center' }); }));
+  document.getElementById('vspin').addEventListener('click', e => { spin = !spin; controls.autoRotate = spin; e.currentTarget.classList.toggle('off', !spin); });
+  let visible = false;
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible && !started) { started = true; show('cherry'); } }, { threshold: .1 }).observe(wrap);
+  const clock = new THREE.Clock();
+  (function loop() {
+    requestAnimationFrame(loop);
+    if (!visible) return;
+    const dt = clock.getDelta(), t = clock.elapsedTime;
+    if (petals.visible) {
+      const p = petals.geometry.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        let y = p.getY(i) - dt * (4 + (i % 5));
+        let x = p.getX(i) + Math.sin(t + i) * dt * 2 + dt * 3;
+        if (y < -10) { y = 120; x = (Math.random() - .5) * 220; }
+        if (x > 110) x = -110;
+        p.setXYZ(i, x, y, p.getZ(i));
+      }
+      p.needsUpdate = true;
+    }
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+}
+</script>
+<script>addEventListener('load', () => setTimeout(() => document.getElementById('intro').classList.add('done'), 700)); setTimeout(() => document.getElementById('intro').classList.add('done'), 3000);</script>
+</body>
+</html>
